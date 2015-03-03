@@ -11,6 +11,7 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -250,8 +251,9 @@ public class MainFrame extends javax.swing.JFrame {
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
 
         JFileChooser chooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images", "jpg", "gif", "jpeg", "png");
-        chooser.setFileFilter(filter);
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "JPG"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "PNG"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("jpeg", "JPEG"));
         int returnVal = chooser.showOpenDialog(this);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -260,7 +262,7 @@ public class MainFrame extends javax.swing.JFrame {
                 currentImage = ImageIO.read(selectedFile);
                 editImage = new ImageModel(currentImage);
                 editImage.setName(selectedFile.getName());
-                editImage.setLocationString(selectedFile.getAbsolutePath());
+                editImage.setLocationString(selectedFile.getCanonicalPath());
                 setPanelImage(currentImage);
             } catch (IOException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -274,24 +276,33 @@ public class MainFrame extends javax.swing.JFrame {
     //save 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         JFileChooser dialog = new JFileChooser();
-        //dialog.setCurrentDirectory(editImage.getLocationString());
-        //dialog.set
+        dialog.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "JPG"));
+        dialog.addChoosableFileFilter(new FileNameExtensionFilter("png", "PNG"));
+        dialog.addChoosableFileFilter(new FileNameExtensionFilter("jpeg", "JPEG"));
+        dialog.setCurrentDirectory(selectedFile.getAbsoluteFile());
         int rVal = dialog.showSaveDialog(this);
-      if (rVal == JFileChooser.APPROVE_OPTION) {
-        //filename.setText(dialog.getSelectedFile().getName());
-        //dir.setText(dialog.getCurrentDirectory().toString());
-      }
-      if (rVal == JFileChooser.CANCEL_OPTION) {
-        //filename.setText("You pressed cancel");
-        //dir.setText("");
-      }
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            try {
+                editImage.save();
+                String name = dialog.getSelectedFile().getName();
+                String type = dialog.getFileFilter().getDescription();
+                File saveFile = new File(dialog.getCurrentDirectory(), name + "." + type);
+
+                if (!ImageIO.write((BufferedImage) editImage.getImage(), type, saveFile)) {
+                    throw new RuntimeException("Unexpected error writing image");
+
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
     //rotate 90 degree left
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
         editImage.rotate90DegreeLeft();
         currentImage = editImage.getEditImage();
         setPanelImage(currentImage);
-        
+
     }//GEN-LAST:event_jMenuItem4ActionPerformed
     //rotate 90 degree right
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
@@ -310,22 +321,23 @@ public class MainFrame extends javax.swing.JFrame {
         this.jPanel2.setVisible(true);
         this.jSlider1.setValue(50);
         changePerform = OperationEnum.Contrast;
-        
+
     }//GEN-LAST:event_jMenuItem7ActionPerformed
 
     private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-       this.jPanel2.setVisible(false);
+        this.jPanel2.setVisible(false);
     }//GEN-LAST:event_jButton1MouseClicked
 
     private void jSlider1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSlider1StateChanged
-        this.jLabel4.setText(this.jSlider1.getValue() - 50 + "");
-        
-        if(changePerform.name().equals(OperationEnum.Brightness.name())) {
-            editImage.changeBrightness(this.jSlider1.getValue() - 50);
-        }else if(changePerform.name().equals(OperationEnum.Contrast.name())) {
-            editImage.changeContrast(this.jSlider1.getValue()-50);
+        int value = (this.jSlider1.getValue() - 50 );
+        this.jLabel4.setText( value + "");
+
+        if (changePerform.name().equals(OperationEnum.Brightness.name())) {
+            editImage.changeBrightness(value);
+        } else if (changePerform.name().equals(OperationEnum.Contrast.name())) {
+            editImage.changeContrast(value);
         }
-        
+
         currentImage = editImage.getEditImage();
         setPanelImage(currentImage);
     }//GEN-LAST:event_jSlider1StateChanged
@@ -350,7 +362,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
-    
+
     private void setPanelImage(Image image) {
         this.jLabel1.setIcon(null);
         this.jLabel1.setIcon(new ImageIcon(image));
@@ -359,28 +371,28 @@ public class MainFrame extends javax.swing.JFrame {
         this.validate();
         resizeFrameOnImageSize(image);
     }
-    
+
     private void resizeFrameOnImageSize(Image image) {
         Dimension imageDimension = new Dimension(image.getWidth(null), image.getHeight(null));
-        if(imageFitsScreen(imageDimension)) {
+        if (imageFitsScreen(imageDimension)) {
             this.jScrollPane1.setPreferredSize(new Dimension(image.getWidth(null), image.getHeight(null)));
             this.setPreferredSize(this.jScrollPane1.getSize());
-        }else {
+        } else {
             Dimension screenDimension = getScreenSize();
             this.jScrollPane1.setPreferredSize(screenDimension);
             this.setExtendedState(Frame.MAXIMIZED_BOTH);
         }
-        
-        
+
     }
-    
+
     private boolean imageFitsScreen(Dimension dimension) {
-        if(dimension.getWidth() > getScreenSize().width || dimension.getHeight() > getScreenSize().height) 
+        if (dimension.getWidth() > getScreenSize().width || dimension.getHeight() > getScreenSize().height) {
             return false;
-        
+        }
+
         return true;
     }
-    
+
     private Dimension getScreenSize() {
         return Toolkit.getDefaultToolkit().getScreenSize();
     }

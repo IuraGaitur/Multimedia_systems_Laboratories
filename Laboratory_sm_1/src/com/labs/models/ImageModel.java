@@ -101,8 +101,8 @@ public class ImageModel implements IProcessing {
     @Override
 
     public void flip() {
-        AffineTransform tx = AffineTransform.getScaleInstance(1, -1);
-        tx.translate(0, -editImage.getWidth(null));
+        AffineTransform tx = AffineTransform.getScaleInstance(-1, 1);
+        tx.translate(-editImage.getWidth(null), 0);
         AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
         this.editImage = op.filter((BufferedImage) editImage, null);
         return;
@@ -111,10 +111,11 @@ public class ImageModel implements IProcessing {
     @Override
 
     public void changeBrightness(int value) {
+        //for each pixed add a value for red,green and blue
         float brightFactor = value*5 +1;
         this.editImage = clone(image);
         BufferedImage imageBuff = toBufferedImage(editImage);
-        RescaleOp op = new RescaleOp(brightFactor, 0, null);
+        RescaleOp op = new RescaleOp(1.0f, brightFactor, null);
         editImage = op.filter(imageBuff, imageBuff);
         
     }
@@ -122,10 +123,10 @@ public class ImageModel implements IProcessing {
     @Override
 
     public void changeContrast(int value) {
-        float contrastFactor = value;
+        float contrastFactor = ((float)value +50) / 50;
         this.editImage = clone(image);
         BufferedImage imageBuff = toBufferedImage(editImage);
-        RescaleOp op = new RescaleOp(1.0f, contrastFactor, null);
+        RescaleOp op = new RescaleOp(contrastFactor, 1.0f, null);
         editImage = op.filter(imageBuff, imageBuff);
     }
 
