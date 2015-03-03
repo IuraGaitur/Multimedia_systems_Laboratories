@@ -1,2 +1,2 @@
-# System_Multimedia_Laboratories
+# Multimedia systems laboratories
 Laboratories at Mr. Cartaleanu
